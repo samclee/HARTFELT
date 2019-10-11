@@ -18,12 +18,30 @@ function rectfill(x, y, w, h, col)
     love.graphics.rectangle('fill', x, y, w, h)
 end
 
-function spr(img, x, y, r, sx, sy, ox, oy)
-    local _r = r or 0
-    local _ox, _oy = ox or 0, oy or 0
-    local _x, _y = x - ox, y - oy
-    local _sx, _sy = sx or 1, sy or 1
-    love.graphics.draw(img, _x, _y, _r, _sx, _sy, _ox, _oy)
+function rectfillc(x, y, w, h, col)
+    local _x, _y = x - w / 2, y - h / 2
+    rectfill(_x, _y, w, h, col)
+end
+
+-- trig math
+local fullrot = 2 * math.pi
+
+function tau(ang)
+    return ang / fullrot
+end
+
+function deg2tau(ang)
+    return  ang / 360
+end
+
+function tau2rad(ang)
+    return ang * fullrot
+end
+
+function tau2deg(ang)
+    return ang * 360
+end
+
 -- sprite visuals
 
 -- applies scale and offset before rotating
@@ -47,15 +65,63 @@ function sprc(img, x, y, opts)
     opts.ox, opts.oy = img:getWidth() / 2, img:getHeight() / 2
     spr(img, x, y, opts)
 end
+
+-- strings
+function strlen(str)
+    return string.len(str)
 end
 
-function sprc(img, x, y, r, sx, sy)
-    local _r = r or 0
-    local _ox, _oy = img:getWidth() / 2, img:getHeight() / 2
-    local _x, _y = x - ox, y - oy
-    local _sx, _sy = sx or 1, sy or 1
-    love.graphics.draw(img, _x, _y, _r, _sx, _sy, _ox, _oy)
+function strw(str)
+    local font = love.graphics.getFont()
+    return font:getWidth(str)
 end
+
+-- text visuals
+function prt(str, x, y, r, col)
+    local _x, _y = x or 0, y or 0
+    local col = col or love.graphics.getColor()
+end
+
+-- tables
+function add(tbl, val)
+    table.insert(tbl, val)
+end
+
+function del(tbl, ind)
+    table.remove(tbl, ind)
+end
+
+function delv(tbl, val)
+    for k,v in pairs(tbl) do
+        if v == val then
+            table.remove(tbl, k)
+            return
+        end
+    end
+end
+
+function foreach(tbl, fn)
+    for _,v in pairs(tbl) do
+        fn(v)
+    end
+end
+
+-- input
+function btn(k)
+    return love.keyboard.isDown(k)
+end
+
+-- non-trig math
+function abs(num)
+    return math.abs(num)
+end
+
+function sgn(num)
+    if num < 0 then
+        return -1
+    elseif num > 0 then
+        return 1
+    end
 
     return 0
 end
