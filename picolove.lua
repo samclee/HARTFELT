@@ -1,10 +1,11 @@
 
 -- primitive visuals
 function rect(x, y, w, h, col)
-    local col = col or {love.graphics.getColor()}
-    love.graphics.setColor(col)
+    local prev_col = {love.graphics.getColor()}
+    local _col = col or prev_col
+    love.graphics.setColor(_col)
     love.graphics.rectangle('line', x, y, w, h)
-    love.graphics.setColor(1,1,1)
+    love.graphics.setColor(prev_col)
 end
 
 function rectc(x, y, w, h, col)
@@ -13,14 +14,40 @@ function rectc(x, y, w, h, col)
 end
 
 function rectfill(x, y, w, h, col)
-    local col = col or {love.graphics.getColor()}
-    love.graphics.setColor(col)
+    local prev_col = {love.graphics.getColor()}
+    local _col = col or prev_col
+    love.graphics.setColor(_col)
     love.graphics.rectangle('fill', x, y, w, h)
+    love.graphics.setColor(prev_col)
 end
 
 function rectfillc(x, y, w, h, col)
     local _x, _y = x - w / 2, y - h / 2
     rectfill(_x, _y, w, h, col)
+end
+
+function circ(x, y, r, col)
+    ell(x, y, r, r, col)
+end
+
+function ell(x, y, rx, ry, col)
+    local prev_col = {love.graphics.getColor()}
+    local _col = col or prev_col
+    love.graphics.setColor(_col)
+    love.graphics.ellipse('line', x, y, rx, ry)
+    love.graphics.setColor(prev_col)
+end
+
+function circfill(x, y, r, col)
+    ellfill(x, y, r, r, col)
+end
+
+function ellfill(x, y, rx, ry, col)
+    local prev_col = {love.graphics.getColor()}
+    local _col = col or prev_col
+    love.graphics.setColor(_col)
+    love.graphics.ellipse('fill', x, y, rx, ry)
+    love.graphics.setColor(prev_col)
 end
 
 -- trig math
@@ -76,10 +103,25 @@ function strw(str)
     return font:getWidth(str)
 end
 
+function strh(str)
+    local font = love.graphics.getFont()
+    return font:getHeight(str)
+end
+
 -- text visuals
 function prt(str, x, y, r, col)
     local _x, _y = x or 0, y or 0
+    local _r = r or 0
     local col = col or love.graphics.getColor()
+    love.graphics.setColor(col)
+
+    love.graphics.print(str, _x, _y, _r)
+    love.graphics.setColor(1, 1, 1)
+end
+
+function prtc(str, x, y, r, col)
+    local _x, _y = x - strw(str) / 2, y - strh(str) / 2
+    prt(str, _x, _y, r, col)
 end
 
 -- tables

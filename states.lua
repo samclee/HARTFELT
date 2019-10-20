@@ -4,8 +4,8 @@ local states = {}
 states[1] = {}
 
 states[1].draw = function()
-    rect(0, 0, 50, 50)
-    rectfill(50, 0, 50, 50)
+    rect(0, 0, 50, 50, {0, 1, 0})
+    rectfill(50, 0, 50, 50, {0, 1, 0})
     rectc(125, 25, 50, 50)
     rectfillc(175, 25, 50, 50)
     rect(0, 50, 50, 50, {1,0,0})
