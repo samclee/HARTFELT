@@ -1,94 +1,72 @@
 
 -- primitive visuals
 function rect(x, y, w, h, col)
-    local prev_col = {love.graphics.getColor()}
-    local _col = col or prev_col
-    love.graphics.setColor(_col)
-    love.graphics.rectangle('line', x, y, w, h)
-    love.graphics.setColor(prev_col)
+
 end
 
 function rectc(x, y, w, h, col)
-    local _x, _y = x - w / 2, y - h / 2
-    rect(_x, _y, w, h, col)
+
 end
 
 function rectfill(x, y, w, h, col)
-    local prev_col = {love.graphics.getColor()}
-    local _col = col or prev_col
-    love.graphics.setColor(_col)
-    love.graphics.rectangle('fill', x, y, w, h)
-    love.graphics.setColor(prev_col)
+
 end
 
 function rectfillc(x, y, w, h, col)
-    local _x, _y = x - w / 2, y - h / 2
-    rectfill(_x, _y, w, h, col)
+
 end
 
 function circ(x, y, r, col)
-    ell(x, y, r, r, col)
+
 end
 
 function ell(x, y, rx, ry, col)
-    local prev_col = {love.graphics.getColor()}
-    local _col = col or prev_col
-    love.graphics.setColor(_col)
-    love.graphics.ellipse('line', x, y, rx, ry)
-    love.graphics.setColor(prev_col)
+
 end
 
 function circfill(x, y, r, col)
-    ellfill(x, y, r, r, col)
+
 end
 
 function ellfill(x, y, rx, ry, col)
-    local prev_col = {love.graphics.getColor()}
-    local _col = col or prev_col
-    love.graphics.setColor(_col)
-    love.graphics.ellipse('fill', x, y, rx, ry)
-    love.graphics.setColor(prev_col)
+
 end
 
 -- trig math
-local fullrot = 2 * math.pi
-
-function tau(ang)
-    return ang / fullrot
+function rad2tau(rad)
+    return rad / (2 * math.pi)
 end
 
-function deg2tau(ang)
-    return  ang / 360
+function deg2tau(deg)
+    return  deg / 360
 end
 
 function tau2rad(ang)
-    return ang * fullrot
+    return ang * (2 * math.pi)
 end
 
 function tau2deg(ang)
     return ang * 360
 end
 
--- sprite visuals
+function sin(tau)
+    return math.sin(tau2rad(tau))
+end
 
--- applies scale and offset before rotating
+function cos(tau)
+    return math.cos(tau2rad(tau))
+end
+
+-- sprite visuals
 function spr(img, x, y, opts)
-    local x, y = x or 0, y or 0
-    local r, ox, oy, sx, sy = 0, 0, 0, 1, 1
-    if opts then
-        r = opts.r or r
-        ox, oy = opts.ox or ox, opts.oy or oy
-        sx, sy = opts.sx or sx, opts.sy or sy
-        if opts.debug then
-            rect(x, y, img:getHeight(), img:getWidth(), {0,1,1})
-            rectc(x, y, 6, 6, {0,1,1})
-        end
-    end
-    love.graphics.draw(img, x, y, tau2rad(r), sx, sy, ox, oy)
+    local r = opts.r or 0
+    local sx, sy = opts.sx or 1, opts.sy or opts.sx or 1
+    local ox, oy = opts.ox or 0, opts.oy or 0
+
+    love.graphics.draw(img, x, y, r, sx, sy, ox, oy)
 end
 
 function sprc(img, x, y, opts)
-    local opts = opts or {}
     opts.ox, opts.oy = img:getWidth() / 2, img:getHeight() / 2
     spr(img, x, y, opts)
 end
@@ -109,19 +87,12 @@ function strh(str)
 end
 
 -- text visuals
-function prt(str, x, y, r, col)
-    local _x, _y = x or 0, y or 0
-    local _r = r or 0
-    local col = col or love.graphics.getColor()
-    love.graphics.setColor(col)
+function prt(str, x, y, opts)
 
-    love.graphics.print(str, _x, _y, _r)
-    love.graphics.setColor(1, 1, 1)
 end
 
 function prtc(str, x, y, r, col)
-    local _x, _y = x - strw(str) / 2, y - strh(str) / 2
-    prt(str, _x, _y, r, col)
+
 end
 
 -- tables
@@ -194,6 +165,19 @@ function dist(x1, y1, x2, y2)
     return math.sqrt((x1-x2)^2 + (y1-y2)^2)
 end
 
+function mag(x, y)
+    return dist(0, 0, x, y)
+end
+
+function mod(a, b)
+    return math.fmod(a, b)
+end
+
+function norm(x, y)
+    local len = mag(x, y)
+    return x / len, y / len
+end
+
 function indist(x1, y1, x2, y2, d)
     return dist(x1, y1, x2, y2) <= d
 end
@@ -202,20 +186,46 @@ function aabbcol(b1, b2)
     return b1.x + b1.w > b2.x and b2.x + b2.w > b1.x and b1.y + b1.h > b2.y and b2.y + b2.h > b1.y
 end
 
--- REALLY SPECIALIZED JUNK, DO NOT USE IF YOU ARE NOT ME
-function upall(tbl, ...)
-    assert(tbl, "Need table to iterate through")
-    for i = #tbl, 1, -1 do
-        tbl[i]:update(unpack(args))
-        if tbl[i].dead == true then
-            table.remove(tbl, i)
-        end
+-- Funky shorthands
+function cond(exp, v1, v2)
+    if exp then
+        return v1
     end
+
+    return v2
 end
 
-function drall(...)
-    assert(args.tbl, "Need table to iterate through")
-    for i = 1, #tbl do
-        tbl[i]:draw(unpack(args))
+function i(val)
+    return val + 1
+end
+
+function d(val)
+    return val - 1
+end
+
+function loop(val, lim, dir)
+    if dir == 'up' then
+        val = mod(val, lim) + 1
+    elseif dir == 'down' then
+        val = d(val)
+        if val <= 0 then val = lim end
     end
+
+    return val
+end
+
+function upall(tbl, ...)
+
+end
+
+function drall(tbl)
+
+end
+
+function quit()
+    love.event.quit()
+end
+
+function restart()
+    love.event.quit('restart')
 end
