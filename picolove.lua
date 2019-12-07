@@ -1,34 +1,86 @@
+-- Funky shorthands
+function cond(exp, v1, v2)
+    if exp then
+        return v1
+    end
+
+    return v2
+end
+
+function i(val)
+    return val + 1
+end
+
+function d(val)
+    return val - 1
+end
+
+function loop(val, lim, dir)
+    if dir == 'up' then
+        val = mod(val, lim) + 1
+    elseif dir == 'down' then
+        val = d(val)
+        if val <= 0 then val = lim end
+    end
+
+    return val
+end
+
+function upall(tbl, ...)
+
+end
+
+function drall(tbl)
+
+end
+
+function quit()
+    love.event.quit()
+end
+
+function restart()
+    love.event.quit('restart')
+end
+
+function first(tbl)
+    return tbl[1] or nil
+end
 
 -- primitive visuals
-function rect(x, y, w, h, col)
+function rect(x, y, w, h, opts)
+    local mode = opts.mode or 'line'
+    x, y = cond(opts.center, x - w / 2, x), cond(opts.center, y - h / 2, y)
+    love.graphics.rectangle(mode, x, y, w, h)
+end
+
+function rectc(x, y, w, h, opts)
+    opts.center = true
+    rect(x, y, w, h, opts)
+end
+
+function rectf(x, y, w, h, opts)
+    opts.mode = 'fill'
+    rect(x, y, w, h, opts)
+end
+
+function rectfc(x, y, w, h, opts)
+    opts.center = true
+    rectf(x, y, w, h, opts)
+end
+
+function circ(x, y, r, opts)
 
 end
 
-function rectc(x, y, w, h, col)
+function ell(x, y, opts)
 
 end
 
-function rectfill(x, y, w, h, col)
+function circfill(x, y, r, opts)
 
 end
 
-function rectfillc(x, y, w, h, col)
-
-end
-
-function circ(x, y, r, col)
-
-end
-
-function ell(x, y, rx, ry, col)
-
-end
-
-function circfill(x, y, r, col)
-
-end
-
-function ellfill(x, y, rx, ry, col)
+function ellfill(x, y, opts)
 
 end
 
@@ -57,21 +109,27 @@ function cos(tau)
     return math.cos(tau2rad(tau))
 end
 
--- sprite visuals
-function spr(img, x, y, opts)
+-- sprite visuals - DONE
+function spr(img, x, y, ...)
+    local opts = first({...}) or {}
     local r = opts.r or 0
     local sx, sy = opts.sx or 1, opts.sy or opts.sx or 1
     local ox, oy = opts.ox or 0, opts.oy or 0
 
+    local prev_clr = {love.graphics.getColor()}
+    local new_clr = opts.clr or prev_clr
+    love.graphics.setColor(new_clr)
     love.graphics.draw(img, x, y, r, sx, sy, ox, oy)
+    love.graphics.setColor(prev_clr)
 end
 
-function sprc(img, x, y, opts)
+function sprc(img, x, y, ...)
+    local opts = first({...}) or {}
     opts.ox, opts.oy = img:getWidth() / 2, img:getHeight() / 2
     spr(img, x, y, opts)
 end
 
--- strings
+-- string logic - DONE
 function strlen(str)
     return string.len(str)
 end
@@ -86,13 +144,24 @@ function strh(str)
     return font:getHeight(str)
 end
 
--- text visuals
-function prt(str, x, y, opts)
+-- text visuals - DONE
+function prt(str, x, y, ...)
+    local opts = first({...}) or {}
+    local r = opts.r or 0
+    local sx, sy = opts.sx or 1, opts.sy or opts.sx or 1
+    local ox, oy = opts.ox or 0, opts.oy or 0
 
+    local prev_clr = {love.graphics.getColor()}
+    local new_clr = opts.clr or prev_clr
+    love.graphics.setColor(new_clr)
+    love.graphics.print(str, x, y, r, sx, sy, ox, oy)
+    love.graphics.setColor(prev_clr)
 end
 
-function prtc(str, x, y, r, col)
-
+function prtc(str, x, y, ...)
+    local opts = first({...}) or {}
+    opts.ox, opts.oy = strw(str) / 2, strh(str) / 2
+    prt(str, x, y, opts)
 end
 
 -- tables
@@ -119,12 +188,12 @@ function foreach(tbl, fn)
     end
 end
 
--- input
+-- input - DONE
 function btn(k)
     return love.keyboard.isDown(k)
 end
 
--- non-trig math
+-- non-trig math - DONE
 function abs(num)
     return math.abs(num)
 end
@@ -184,48 +253,4 @@ end
 
 function aabbcol(b1, b2)
     return b1.x + b1.w > b2.x and b2.x + b2.w > b1.x and b1.y + b1.h > b2.y and b2.y + b2.h > b1.y
-end
-
--- Funky shorthands
-function cond(exp, v1, v2)
-    if exp then
-        return v1
-    end
-
-    return v2
-end
-
-function i(val)
-    return val + 1
-end
-
-function d(val)
-    return val - 1
-end
-
-function loop(val, lim, dir)
-    if dir == 'up' then
-        val = mod(val, lim) + 1
-    elseif dir == 'down' then
-        val = d(val)
-        if val <= 0 then val = lim end
-    end
-
-    return val
-end
-
-function upall(tbl, ...)
-
-end
-
-function drall(tbl)
-
-end
-
-function quit()
-    love.event.quit()
-end
-
-function restart()
-    love.event.quit('restart')
 end
