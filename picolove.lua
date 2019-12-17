@@ -1,3 +1,27 @@
+-- tables
+function add(tbl, val)
+    table.insert(tbl, val)
+end
+
+function del(tbl, ind)
+    table.remove(tbl, ind)
+end
+
+function delv(tbl, val)
+    for k,v in pairs(tbl) do
+        if v == val then
+            table.remove(tbl, k)
+            return
+        end
+    end
+end
+
+function foreach(tbl, fn)
+    for _,v in ipairs(tbl) do
+        fn(v)
+    end
+end
+
 -- Funky shorthands
 function cond(exp, v1, v2)
     if exp then
@@ -34,6 +58,14 @@ function drall(tbl)
 
 end
 
+function ginit()
+    scrw = love.graphics.getWidth()
+    scrh = love.graphics.getHeight()
+    mscrw = scrw / 2
+    mscrh = scrh / 2
+    love.math.setRandomSeed(os.time())
+end
+
 function quit()
     love.event.quit()
 end
@@ -46,26 +78,57 @@ function first(tbl)
     return tbl[1] or nil
 end
 
+function rndfrom(tbl)
+    return tbl[love.math.random(#tbl)]
+end
+
 -- primitive visuals
-function rect(x, y, w, h, opts)
-    local mode = opts.mode or 'line'
+function _rect(x, y, w, h, opts)
     x, y = cond(opts.center, x - w / 2, x), cond(opts.center, y - h / 2, y)
-    love.graphics.rectangle(mode, x, y, w, h)
+
+    local prev_clr = {love.graphics.getColor()}
+    local prev_line_wid = love.graphics.getLineWidth()
+    if opts.clr then
+        love.graphics.setColor(opts.clr)
+    end
+    if opts.w then
+        love.graphics.setLineWidth(opts.w)
+    end
+
+    love.graphics.rectangle(opts.mode, x, y, w, h)
+
+    if opts.clr then
+        love.graphics.setColor(prev_clr)
+    end
+    if opts.w then
+        love.graphics.setLineWidth(prev_line_wid)
+    end
 end
 
-function rectc(x, y, w, h, opts)
-    opts.center = true
-    rect(x, y, w, h, opts)
+function rect(x, y, w, h, ...)
+    local opts = { mode = 'line' }
+    opts.clr = sel({...},1)
+    opts.w = sel({...},2)
+    _rect(x, y, w, h, opts)
 end
 
-function rectf(x, y, w, h, opts)
-    opts.mode = 'fill'
-    rect(x, y, w, h, opts)
+function rectc(x, y, w, h, ...)
+    local opts = { mode = 'line', center = true }
+    opts.clr = sel({...},1)
+    opts.w = sel({...},2)
+    _rect(x, y, w, h, opts)
 end
 
-function rectfc(x, y, w, h, opts)
-    opts.center = true
-    rectf(x, y, w, h, opts)
+function rectf(x, y, w, h, ...)
+    local opts = { mode = 'fill' }
+    opts.clr = sel({...},1)
+    _rect(x, y, w, h, opts)
+end
+
+function rectfc(x, y, w, h, ...)
+    local opts = { mode = 'fill', center = true }
+    opts.clr = sel({...},1)
+    _rect(x, y, w, h, opts)
 end
 
 function circ(x, y, r, opts)
@@ -115,11 +178,12 @@ function spr(img, x, y, ...)
     local r = opts.r or 0
     local sx, sy = opts.sx or 1, opts.sy or opts.sx or 1
     local ox, oy = opts.ox or 0, opts.oy or 0
+    local kx, ky = opts.kx or 0, opts.ky or 0
 
     local prev_clr = {love.graphics.getColor()}
     local new_clr = opts.clr or prev_clr
     love.graphics.setColor(new_clr)
-    love.graphics.draw(img, x, y, r, sx, sy, ox, oy)
+    love.graphics.draw(img, x, y, r, sx, sy, ox, oy, kx, ky)
     love.graphics.setColor(prev_clr)
 end
 
@@ -129,18 +193,32 @@ function sprc(img, x, y, ...)
     spr(img, x, y, opts)
 end
 
+function sprsh(img, quad, x, y, ...)
+    local opts = first({...}) or {}
+    local r = opts.r or 0
+    local sx, sy = opts.sx or 1, opts.sy or opts.sx or 1
+    local ox, oy = opts.ox or 0, opts.oy or 0
+    local kx, ky = opts.kx or 0, opts.ky or 0
+
+    local prev_clr = {love.graphics.getColor()}
+    local new_clr = opts.clr or prev_clr
+    love.graphics.setColor(new_clr)
+    love.graphics.draw(img, quad, x, y, r, sx, sy, ox, oy, kx, ky)
+    love.graphics.setColor(prev_clr)
+end
+
 -- string logic - DONE
 function strlen(str)
     return string.len(str)
 end
 
-function strw(str)
-    local font = love.graphics.getFont()
+function strw(str, font)
+    local font = font or love.graphics.getFont()
     return font:getWidth(str)
 end
 
-function strh(str)
-    local font = love.graphics.getFont()
+function strh(str, font)
+    local font = font or love.graphics.getFont()
     return font:getHeight(str)
 end
 
@@ -150,11 +228,12 @@ function prt(str, x, y, ...)
     local r = opts.r or 0
     local sx, sy = opts.sx or 1, opts.sy or opts.sx or 1
     local ox, oy = opts.ox or 0, opts.oy or 0
+    local kx, ky = opts.kx or 0, opts.ky or 0
 
     local prev_clr = {love.graphics.getColor()}
     local new_clr = opts.clr or prev_clr
     love.graphics.setColor(new_clr)
-    love.graphics.print(str, x, y, r, sx, sy, ox, oy)
+    love.graphics.print(str, x, y, r, sx, sy, ox, oy, kx, ky)
     love.graphics.setColor(prev_clr)
 end
 
@@ -162,30 +241,6 @@ function prtc(str, x, y, ...)
     local opts = first({...}) or {}
     opts.ox, opts.oy = strw(str) / 2, strh(str) / 2
     prt(str, x, y, opts)
-end
-
--- tables
-function add(tbl, val)
-    table.insert(tbl, val)
-end
-
-function del(tbl, ind)
-    table.remove(tbl, ind)
-end
-
-function delv(tbl, val)
-    for k,v in pairs(tbl) do
-        if v == val then
-            table.remove(tbl, k)
-            return
-        end
-    end
-end
-
-function foreach(tbl, fn)
-    for _,v in pairs(tbl) do
-        fn(v)
-    end
 end
 
 -- input - DONE
@@ -214,6 +269,10 @@ end
 
 function ismid(lo, md, hi)
     return lo <= md and md <= hi
+end
+
+function inb(x, y, b)
+    return ismid(x, b.x, b.x+b.w) and ismid(y, b.y, b.y+b.h)
 end
 
 function flr(num)
@@ -253,4 +312,49 @@ end
 
 function aabbcol(b1, b2)
     return b1.x + b1.w > b2.x and b2.x + b2.w > b1.x and b1.y + b1.h > b2.y and b2.y + b2.h > b1.y
+end
+
+
+-- probability
+function _rnd(lo, hi)
+	return love.math.random()  * (hi - lo) + lo
+end
+
+function rnd(...)
+    local args = {...}
+	if #args == 0 then
+		return love.math.random()
+	elseif #args == 1 then
+		return _rnd(0, args[1])
+	elseif #args >= 2 then
+		return _rnd(args[1], args[2])
+	end
+end
+
+function rndi(a, ...)
+	local args = {...}
+	if #args == 0 then
+		return love.math.random(0, a)
+	elseif #args == 1 then
+		return love.math.random(a, args[1])
+	end
+end
+
+function mc()
+	return rnd() < 0.5
+end
+function mn()
+	return cond(mc(), -1, 1)
+end
+function mz()
+	return cond(mc(), 0, 1)
+end
+
+-- Sound
+function mus(str)
+    local src = love.audio.newSource(str)
+    src:setLooping(true)
+    src:play()
+
+    return src
 end

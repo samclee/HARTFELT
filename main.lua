@@ -3,7 +3,9 @@ gs = require 'gamestate'
 
 states = {
     sprites = require 'sprites',
-    strings = require 'strings'
+    strings = require 'strings',
+    primitives = require 'primitives',
+    prob = require 'prob'
 }
 
 function love.load()
@@ -11,7 +13,7 @@ function love.load()
     bee = love.graphics.newImage('bee.png')
     
     gs.registerEvents()
-    gs.switch(states.strings)
+    gs.switch(states.prob)
 end
 
 function love.draw()
