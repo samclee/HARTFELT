@@ -1,4 +1,5 @@
--- tables
+-- Table utilities
+-- Increase speed of table insertion, removal, deletion, iteration, and selection
 function add(tbl, val)
     table.insert(tbl, val)
 end
@@ -22,7 +23,20 @@ function foreach(tbl, fn)
     end
 end
 
+function first(tbl)
+    return tbl[1] or nil
+end
+
+function sel(tbl, ind)
+    return tbl[ind]
+end
+
+function rndfrom(tbl)
+    return tbl[love.math.random(#tbl)]
+end
+
 -- Funky shorthands
+-- Highly specialized snippets of code 
 function cond(exp, v1, v2)
     if exp then
         return v1
@@ -39,15 +53,20 @@ function d(val)
     return val - 1
 end
 
-function loop(val, lim, dir)
-    if dir == 'up' then
-        val = mod(val, lim) + 1
-    elseif dir == 'down' then
-        val = d(val)
-        if val <= 0 then val = lim end
-    end
+function il(val, lim, base)
+    local base = base or 1
+    local val = val - base
+    local lim = lim - base + 1
+    local res = mod(val+1, lim)
+    return res + base
+end
 
-    return val
+function dl(val, lim, base)
+    local base = base or 1
+    local val = val - base
+    local lim = lim - base + 1
+    local res = (val-1) % lim
+    return res + base
 end
 
 function upall(tbl, ...)
@@ -58,12 +77,15 @@ function drall(tbl)
 
 end
 
+-- Callback companions
+-- Functions to that should be called with/assist with the calling of LÖVE callbacks
 function ginit()
     scrw = love.graphics.getWidth()
     scrh = love.graphics.getHeight()
     mscrw = scrw / 2
     mscrh = scrh / 2
     love.math.setRandomSeed(os.time())
+    love.graphics.setDefaultFilter('nearest', 'nearest')
 end
 
 function quit()
@@ -74,15 +96,8 @@ function restart()
     love.event.quit('restart')
 end
 
-function first(tbl)
-    return tbl[1] or nil
-end
-
-function rndfrom(tbl)
-    return tbl[love.math.random(#tbl)]
-end
-
--- primitive visuals
+-- Primitive visuals
+-- Intended to increase the speed of drawing LÖVE visual primitives
 function _rect(x, y, w, h, opts)
     x, y = cond(opts.center, x - w / 2, x), cond(opts.center, y - h / 2, y)
 
@@ -131,36 +146,85 @@ function rectfc(x, y, w, h, ...)
     _rect(x, y, w, h, opts)
 end
 
-function circ(x, y, r, opts)
+function _circ(x, y, r, opts)
+    local prev_clr = {love.graphics.getColor()}
+    local prev_line_wid = love.graphics.getLineWidth()
+    if opts.clr then
+        love.graphics.setColor(opts.clr)
+    end
+    if opts.w then
+        love.graphics.setLineWidth(opts.w)
+    end
 
+    love.graphics.circle(opts.mode, x, y, r)
+
+    if opts.clr then
+        love.graphics.setColor(prev_clr)
+    end
+    if opts.w then
+        love.graphics.setLineWidth(prev_line_wid)
+    end
 end
 
-function ell(x, y, opts)
-
+function circ(x, y, r, ...)
+    local opts = { mode = 'line' }
+    opts.clr = sel({...},1)
+    opts.w = sel({...},2)
+    _circ(x, y, r, opts)
 end
 
-function circfill(x, y, r, opts)
-
+function circf(x, y, r, ...)
+    local opts = { mode = 'fill' }
+    opts.clr = sel({...},1)
+    _circ(x, y, r, opts)
 end
 
-function ellfill(x, y, opts)
+function line(x1, y1, x2, y2, ...)
+    local clr = sel({...},1)
+    local w = sel({...},2)
 
+    local prev_clr = {love.graphics.getColor()}
+    local prev_line_wid = love.graphics.getLineWidth()
+    if clr then
+        love.graphics.setColor(clr)
+    end
+    if w then
+        love.graphics.setLineWidth(w)
+    end
+
+    love.graphics.line(x1, y1, x2, y2)
+
+    if clr then
+        love.graphics.setColor(prev_clr)
+    end
+    if w then
+        love.graphics.setLineWidth(prev_line_wid)
+    end
 end
 
--- trig math
-function rad2tau(rad)
+-- Trig Arithmetic
+-- Intended to help with trigonometry-based calculations
+function deg(rad)
+    return math.deg(rad)
+end
+
+function rad(deg)
+    return math.rad(deg)
+end
+
+function r2t(rad)
     return rad / (2 * math.pi)
 end
 
-function deg2tau(deg)
-    return  deg / 360
+function d2t(deg)
+    return deg / 360
 end
 
-function tau2rad(ang)
+function t2r(ang)
     return ang * (2 * math.pi)
 end
 
-function tau2deg(ang)
+function t2d(ang)
     return ang * 360
 end
 
@@ -172,7 +236,8 @@ function cos(tau)
     return math.cos(tau2rad(tau))
 end
 
--- sprite visuals - DONE
+-- Sprite shorthands
+-- Intended for using easier use of optional sprite drawing parameters
 function spr(img, x, y, ...)
     local opts = first({...}) or {}
     local r = opts.r or 0
@@ -207,11 +272,21 @@ function sprsh(img, quad, x, y, ...)
     love.graphics.setColor(prev_clr)
 end
 
--- string logic - DONE
+function pushtransro(x, y, ...)
+    local r = first({...}) or 0
+    love.graphics.push()
+    love.graphics.translate(x, y)
+    love.graphics.rotate(r)
+end
+
+-- String logic
+-- Functions intended to help with string manipulation
 function strlen(str)
     return string.len(str)
 end
 
+-- String visuals
+-- Functions intended to help with string drawing
 function strw(str, font)
     local font = font or love.graphics.getFont()
     return font:getWidth(str)
@@ -222,7 +297,6 @@ function strh(str, font)
     return font:getHeight(str)
 end
 
--- text visuals - DONE
 function prt(str, x, y, ...)
     local opts = first({...}) or {}
     local r = opts.r or 0
@@ -272,7 +346,7 @@ function ismid(lo, md, hi)
 end
 
 function inb(x, y, b)
-    return ismid(x, b.x, b.x+b.w) and ismid(y, b.y, b.y+b.h)
+    return ismid(b.x, x, b.x+b.w) and ismid(b.y, y, b.y+b.h)
 end
 
 function flr(num)
@@ -351,8 +425,8 @@ function mz()
 end
 
 -- Sound
-function mus(str)
-    local src = love.audio.newSource(str)
+function msc(str)
+    local src = love.audio.newSource(str, 'stream')
     src:setLooping(true)
     src:play()
 

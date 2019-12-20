@@ -1,11 +1,14 @@
 require 'picolove'
+mnoo = require 'mnoo'
 gs = require 'gamestate'
 
 states = {
     sprites = require 'sprites',
     strings = require 'strings',
     primitives = require 'primitives',
-    prob = require 'prob'
+    prob = require 'prob',
+    menu = require 'menu',
+    anim = require 'animation'
 }
 
 function love.load()
@@ -13,7 +16,7 @@ function love.load()
     bee = love.graphics.newImage('bee.png')
     
     gs.registerEvents()
-    gs.switch(states.prob)
+    gs.switch(states.anim)
 end
 
 function love.draw()
