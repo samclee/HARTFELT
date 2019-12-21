@@ -1,4 +1,4 @@
-# Helpers And Random Tidbits For Encouraging Less Typing
+# HARTFELT (Helpers And Random Tidbits For Encouraging Less Typing)
 ## picolove
 Several PICO-8-like shorthands for LÖVE functions
 ## mnoo
